@@ -1,0 +1,35 @@
+{
+  "es": {
+    "upload_lang_label": "Idioma:",
+    "upload_step_1_title": "Arrastra o selecciona el Archivo Actual",
+    "upload_step_1_subtitle": "Este es el archivo XML de MS Project más reciente (obligatorio).",
+    "upload_step_1_button": "Seleccionar Archivo",
+    "upload_step_2_banner_title": "Archivo Actual Cargado:",
+    "upload_step_2_title": "Ahora, el Archivo Anterior (Opcional)",
+    "upload_step_2_subtitle": "Para comparar, arrastra o selecciona el XML de la semana pasada.",
+    "upload_step_2_button": "Seleccionar Archivo",
+    "upload_generate_button": "Generar Dashboard"
+  },
+  "en": {
+    "upload_lang_label": "Language:",
+    "upload_step_1_title": "Drag or select the Current File",
+    "upload_step_1_subtitle": "This is the most recent MS Project XML file (required).",
+    "upload_step_1_button": "Select File",
+    "upload_step_2_banner_title": "Current File Loaded:",
+    "upload_step_2_title": "Now, the Previous File (Optional)",
+    "upload_step_2_subtitle": "To compare, drag or select last week's XML file.",
+    "upload_step_2_button": "Select File",
+    "upload_generate_button": "Generate Dashboard"
+  },
+  "pt": {
+    "upload_lang_label": "Idioma:",
+    "upload_step_1_title": "Arraste ou selecione o Arquivo Atual",
+    "upload_step_1_subtitle": "Este é o arquivo XML mais recente do MS Project (obrigatório).",
+    "upload_step_1_button": "Selecionar Arquivo",
+    "upload_step_2_banner_title": "Arquivo Atual Carregado:",
+    "upload_step_2_title": "Agora, o Arquivo Anterior (Opcional)",
+    "upload_step_2_subtitle": "Para comparar, arraste ou selecione o arquivo XML da semana passada.",
+    "upload_step_2_button": "Selecionar Arquivo",
+    "upload_generate_button": "Gerar Dashboard"
+  }
+}
