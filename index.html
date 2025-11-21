@@ -1107,7 +1107,7 @@ header .container > div:last-child { justify-self: end; text-align: right; }
                 const reader = new FileReader();
                 reader.onload = (event) => {
                     const dataUrl = event.target.result;
-                    localStorage.setItem('customLogo', dataUrl);
+                    try{ localStorage.setItem('customLogo', dataUrl); }catch(e){ console.warn('No se pudo guardar customLogo en localStorage (quota):', e); }
                     document.getElementById('custom-logo').src = dataUrl;
                 };
                 reader.readAsDataURL(file);
@@ -3594,7 +3594,7 @@ function applyAdvancedFilters(taskTree) {
           // Lock current box size before swap
           lockLogoBox();
           logo.src = dataURL;
-          localStorage.setItem('customLogo', dataURL);
+          try{ localStorage.setItem('customLogo', dataURL); }catch(e){ console.warn('No se pudo guardar customLogo en localStorage (quota):', e); }
         };
         reader.readAsDataURL(f);
       });
