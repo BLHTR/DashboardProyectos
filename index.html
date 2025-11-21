@@ -965,7 +965,7 @@ header .container > div:last-child { justify-self: end; text-align: right; }
                 lang = 'es';
             }
             CURRENT_LANG = lang;
-            localStorage.setItem('i18nLang', lang);
+            safeSetItem('i18nLang', lang);
             applyLanguage(lang);
 
             const sel = document.getElementById('lang-selector');
@@ -998,6 +998,14 @@ header .container > div:last-child { justify-self: end; text-align: right; }
     let GEMINI_API_KEY = "";
     let TRANSLATIONS = null;
     let CURRENT_LANG = 'es';
+    function safeSetItem(key, value) {
+        try {
+            safeSetItem(key, value);
+        } catch (e) {
+            console.warn('No se pudo guardar en localStorage para key=', key, e);
+        }
+    }
+
 
     // Lock de tamaño de logo BlatoRH
     function lockBlatorhLogoBox() {
@@ -1107,7 +1115,7 @@ header .container > div:last-child { justify-self: end; text-align: right; }
                 const reader = new FileReader();
                 reader.onload = (event) => {
                     const dataUrl = event.target.result;
-                    try{ localStorage.setItem('customLogo', dataUrl); }catch(e){ console.warn('No se pudo guardar customLogo en localStorage (quota):', e); }
+                    try{ safeSetItem('customLogo', dataUrl); }catch(e){ console.warn('No se pudo guardar customLogo en localStorage (quota):', e); }
                     document.getElementById('custom-logo').src = dataUrl;
                 };
                 reader.readAsDataURL(file);
@@ -1118,7 +1126,7 @@ header .container > div:last-child { justify-self: end; text-align: right; }
         document.querySelectorAll('.theme-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 const theme = btn.dataset.theme;
-                localStorage.setItem('customTheme', theme);
+                safeSetItem('customTheme', theme);
                 applyTheme(theme);
             });
         });
@@ -1127,7 +1135,7 @@ header .container > div:last-child { justify-self: end; text-align: right; }
         const colorPicker = document.getElementById('accent-color-picker');
         colorPicker.addEventListener('input', (e) => {
             const newColor = e.target.value;
-            localStorage.setItem('accentColor', newColor);
+            safeSetItem('accentColor', newColor);
             applyAccentColor(newColor);
         });
 
@@ -1139,7 +1147,7 @@ header .container > div:last-child { justify-self: end; text-align: right; }
         saveApiBtn.addEventListener('click', () => {
             const key = apiKeyInput.value.trim();
             if (key) {
-                localStorage.setItem('geminiApiKey', key);
+                safeSetItem('geminiApiKey', key);
                 GEMINI_API_KEY = key;
                 apiStatusMsg.innerHTML = `<i data-lucide="check-circle" class="w-4 h-4 inline-block mr-1 text-green-400"></i>Clave guardada exitosamente.`;
             } else {
@@ -1245,7 +1253,7 @@ header .container > div:last-child { justify-self: end; text-align: right; }
 
     function savePanelPresets(presets) {
         try {
-            localStorage.setItem(PANEL_PRESETS_KEY, JSON.stringify(presets));
+            safeSetItem(PANEL_PRESETS_KEY, JSON.stringify(presets));
         } catch (e) {
             console.warn('No se pudieron guardar los presets de paneles:', e);
         }
@@ -1435,7 +1443,7 @@ header .container > div:last-child { justify-self: end; text-align: right; }
      * Guarda el estado de visibilidad en localStorage.
      */
     function savePanelVisibilityState(state) {
-        localStorage.setItem('panelVisibilityState', JSON.stringify(state));
+        safeSetItem('panelVisibilityState', JSON.stringify(state));
     }
 
     /**
@@ -2257,7 +2265,7 @@ function loadIssuesNotes(storeKey) {
 
 function saveIssuesNotes(storeKey, notes) {
     try {
-        localStorage.setItem(storeKey, JSON.stringify(notes || {}));
+        safeSetItem(storeKey, JSON.stringify(notes || {}));
     } catch (e) {
         console.warn('No se pudieron guardar notas de issues:', e);
     }
@@ -2477,7 +2485,7 @@ function loadPresenterNote(projectName, panelId) {
 function savePresenterNote(projectName, panelId, text) {
     const key = getPresenterNoteKey(projectName, panelId);
     if (text && text.trim()) {
-        localStorage.setItem(key, text);
+        safeSetItem(key, text);
     } else {
         localStorage.removeItem(key);
     }
@@ -3464,7 +3472,7 @@ function applyAdvancedFilters(taskTree) {
   select1?.addEventListener('click', ()=> inputActual?.click());
   select2?.addEventListener('click', ()=> inputAnterior?.click());
   skip2?.addEventListener('click', ()=>{
-    localStorage.setItem('__inline_prev_skipped__','1');
+    safeSetItem('__inline_prev_skipped__','1');
     setState(s2, s2State, 'skip');
     s2File.textContent = 'Saltado.';
     enableGenerateIfReady();
@@ -3594,7 +3602,7 @@ function applyAdvancedFilters(taskTree) {
           // Lock current box size before swap
           lockLogoBox();
           logo.src = dataURL;
-          try{ localStorage.setItem('customLogo', dataURL); }catch(e){ console.warn('No se pudo guardar customLogo en localStorage (quota):', e); }
+          try{ safeSetItem('customLogo', dataURL); }catch(e){ console.warn('No se pudo guardar customLogo en localStorage (quota):', e); }
         };
         reader.readAsDataURL(f);
       });
@@ -3633,7 +3641,7 @@ function applyAdvancedFilters(taskTree) {
         reader.onload = function(evt){
             const dataURL = evt.target.result;
             logoBlatorh.src = dataURL;
-            localStorage.setItem('blatorhLogo', dataURL);
+            safeSetItem('blatorhLogo', dataURL);
         };
         reader.readAsDataURL(f);
     });
