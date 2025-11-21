@@ -955,23 +955,31 @@ header .container > div:last-child { justify-self: end; text-align: right; }
     async function loadTranslations(lang) {
         try {
             if (!lang) lang = 'es';
-            if (!TRANSLATIONS) {
+
+            // Intentar refrescar traducciones desde translations.json,
+            // pero seguir funcionando con las embebidas si falla.
+            try {
                 const resp = await fetch('translations.json');
-                if (!resp.ok) throw new Error('No se pudo cargar translations.json');
-                TRANSLATIONS = await resp.json();
+                if (resp.ok) {
+                    const data = await resp.json();
+                    if (data && typeof data === 'object') {
+                        TRANSLATIONS = data;
+                    }
+                }
+            } catch (innerErr) {
+                console.warn('No se pudo refrescar translations.json, se usan las traducciones embebidas.', innerErr);
             }
-            if (!TRANSLATIONS[lang]) {
-                console.warn('Idioma no encontrado en translations.json, usando ES como fallback');
+
+            if (!TRANSLATIONS || !TRANSLATIONS[lang]) {
+                console.warn('Idioma no encontrado en translations, usando ES como fallback');
                 lang = 'es';
             }
+
             CURRENT_LANG = lang;
             safeSetItem('i18nLang', lang);
             applyLanguage(lang);
-
-            const sel = document.getElementById('lang-selector');
-            if (sel) sel.value = lang;
         } catch (err) {
-            console.warn('Error cargando traducciones, usando ES por defecto', err);
+            console.warn('Error general en loadTranslations, usando ES por defecto', err);
             CURRENT_LANG = 'es';
             if (TRANSLATIONS && TRANSLATIONS['es']) {
                 applyLanguage('es');
@@ -996,11 +1004,45 @@ header .container > div:last-child { justify-self: end; text-align: right; }
 
     // Global variable for API key
     let GEMINI_API_KEY = "";
-    let TRANSLATIONS = null;
+    let TRANSLATIONS = {
+    "es": {
+        "upload_lang_label": "Idioma:",
+        "upload_step_1_title": "Arrastra o selecciona el Archivo Actual",
+        "upload_step_1_subtitle": "Este es el archivo XML de MS Project más reciente (obligatorio).",
+        "upload_step_1_button": "Seleccionar Archivo",
+        "upload_step_2_banner_title": "Archivo Actual Cargado:",
+        "upload_step_2_title": "Ahora, el Archivo Anterior (Opcional)",
+        "upload_step_2_subtitle": "Para comparar, arrastra o selecciona el XML de la semana pasada.",
+        "upload_step_2_button": "Seleccionar Archivo",
+        "upload_generate_button": "Generar Dashboard"
+    },
+    "en": {
+        "upload_lang_label": "Language:",
+        "upload_step_1_title": "Drag or select the Current File",
+        "upload_step_1_subtitle": "This is the most recent MS Project XML file (required).",
+        "upload_step_1_button": "Select File",
+        "upload_step_2_banner_title": "Current File Loaded:",
+        "upload_step_2_title": "Now, the Previous File (Optional)",
+        "upload_step_2_subtitle": "To compare, drag or select last week's XML file.",
+        "upload_step_2_button": "Select File",
+        "upload_generate_button": "Generate Dashboard"
+    },
+    "pt": {
+        "upload_lang_label": "Idioma:",
+        "upload_step_1_title": "Arraste ou selecione o Arquivo Atual",
+        "upload_step_1_subtitle": "Este é o arquivo XML mais recente do MS Project (obrigatório).",
+        "upload_step_1_button": "Selecionar Arquivo",
+        "upload_step_2_banner_title": "Arquivo Atual Carregado:",
+        "upload_step_2_title": "Agora, o Arquivo Anterior (Opcional)",
+        "upload_step_2_subtitle": "Para comparar, arraste ou selecione o arquivo XML da semana passada.",
+        "upload_step_2_button": "Selecionar Arquivo",
+        "upload_generate_button": "Gerar Dashboard"
+    }
+};
     let CURRENT_LANG = 'es';
     function safeSetItem(key, value) {
         try {
-            safeSetItem(key, value);
+            window.localStorage.setItem(key, value);
         } catch (e) {
             console.warn('No se pudo guardar en localStorage para key=', key, e);
         }
