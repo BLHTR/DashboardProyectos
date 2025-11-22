@@ -952,59 +952,7 @@ header .container > div:last-child { justify-self: end; text-align: right; }
     // --- SCRIPT DE LA APLICACIÓN ---
     // --- I18N / Internacionalización ---
 
-    async function loadTranslations(lang) {
-        try {
-            if (!lang) lang = 'es';
-
-            // Intentar refrescar traducciones desde translations.json,
-            // pero seguir funcionando con las embebidas si falla.
-            try {
-                const resp = await fetch('translations.json');
-                if (resp.ok) {
-                    const data = await resp.json();
-                    if (data && typeof data === 'object') {
-                        TRANSLATIONS = data;
-                    }
-                }
-            } catch (innerErr) {
-                console.warn('No se pudo refrescar translations.json, se usan las traducciones embebidas.', innerErr);
-            }
-
-            if (!TRANSLATIONS || !TRANSLATIONS[lang]) {
-                console.warn('Idioma no encontrado en translations, usando ES como fallback');
-                lang = 'es';
-            }
-
-            CURRENT_LANG = lang;
-            safeSetItem('i18nLang', lang);
-            applyLanguage(lang);
-        } catch (err) {
-            console.warn('Error general en loadTranslations, usando ES por defecto', err);
-            CURRENT_LANG = 'es';
-            if (TRANSLATIONS && TRANSLATIONS['es']) {
-                applyLanguage('es');
-            }
-        }
-    }
-
-    function applyLanguage(lang) {
-        if (!TRANSLATIONS || !TRANSLATIONS[lang]) return;
-        const dict = TRANSLATIONS[lang];
-        const fallback = TRANSLATIONS['es'] || {};
-        document.querySelectorAll('[data-i18n-key]').forEach(el => {
-            const key = el.getAttribute('data-i18n-key');
-            if (!key) return;
-            const txt = (dict[key] ?? fallback[key] ?? '');
-            if (typeof txt === 'string') {
-                el.textContent = txt;
-            }
-        });
-    }
-
-
-    // Global variable for API key
-    let GEMINI_API_KEY = "";
-    let TRANSLATIONS = {
+    const TRANSLATIONS = {
     "es": {
         "upload_lang_label": "Idioma:",
         "upload_step_1_title": "Arrastra o selecciona el Archivo Actual",
@@ -1040,7 +988,33 @@ header .container > div:last-child { justify-self: end; text-align: right; }
     }
 };
     let CURRENT_LANG = 'es';
-    function safeSetItem(key, value) {
+
+    function applyLanguage(lang) {
+        const dict = TRANSLATIONS[lang] || TRANSLATIONS['es'] || {};
+        const fallback = TRANSLATIONS['es'] || {};
+        document.querySelectorAll('[data-i18n-key]').forEach(el => {
+            const key = el.getAttribute('data-i18n-key');
+            if (!key) return;
+            const value = (dict[key] !== undefined ? dict[key] : (fallback[key] || ''));
+            if (typeof value === 'string') {
+                el.textContent = value;
+            }
+        });
+    }
+
+    function setLanguage(lang) {
+        if (!lang || !TRANSLATIONS[lang]) {
+            lang = 'es';
+        }
+        CURRENT_LANG = lang;
+        safeSetItem('i18nLang', lang);
+        applyLanguage(lang);
+    }
+
+// Global variable for API key
+    let GEMINI_API_KEY = "";
+
+function safeSetItem(key, value) {
         try {
             window.localStorage.setItem(key, value);
         } catch (e) {
@@ -1091,13 +1065,13 @@ header .container > div:last-child { justify-self: end; text-align: right; }
 
     document.addEventListener('DOMContentLoaded', () => {
         const storedLang = localStorage.getItem('i18nLang') || 'es';
-        loadTranslations(storedLang);
+        setLanguage(storedLang);
         const langSelectorEl = document.getElementById('lang-selector');
         if (langSelectorEl) {
             langSelectorEl.value = storedLang;
             langSelectorEl.addEventListener('change', (e) => {
                 const lang = e.target.value || 'es';
-                loadTranslations(lang);
+                setLanguage(lang);
             });
         }
 
@@ -1113,7 +1087,7 @@ header .container > div:last-child { justify-self: end; text-align: right; }
                 const btn = e.target.closest('[data-lang]');
                 if (!btn) return;
                 const lang = btn.getAttribute('data-lang') || 'es';
-                loadTranslations(lang);
+                setLanguage(lang);
                 langMenu.classList.add('hidden');
             });
 
