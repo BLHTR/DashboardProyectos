@@ -203,7 +203,13 @@
             80%, 100% { text-shadow: .25em 0 0 #fff, .5em 0 0 #fff; }
         }
 
-    </style>
+    
+.issues-drop-target {
+        outline: 2px dashed var(--bl-dorado);
+        outline-offset: -4px;
+        background-color: rgba(177, 169, 110, 0.08);
+    }
+</style>
 
 <style id="blatorh-patch">
 /* Logo: lock box size to default and keep uploaded image contained */
@@ -2211,16 +2217,30 @@ function renderIssuesKanban(data, flatTaskListOverride = null) {
     const notesStoreKey = getIssuesNotesStoreKey(projectName);
     const notes = loadIssuesNotes(notesStoreKey);
 
+    const statusOverrides =
+        notes.__statuses && typeof notes.__statuses === 'object'
+            ? notes.__statuses
+            : {};
+
     const issues = flat
         .filter(t => t.issueText && t.issueText.trim())
-        .map(t => ({
-            id: t.id,
-            taskName: t.name,
-            parentName: t.parentName || '',
-            fullPath: t.fullPath || '',
-            issueText: t.issueText,
-            status: t.issueStatus || 'Abierto'
-        }));
+        .map(t => {
+            const baseStatus = t.issueStatus || 'Abierto';
+            const overrideStatus = statusOverrides[t.id];
+            const finalStatus = ISSUE_STATUSES.some(s => s.key === overrideStatus)
+                ? overrideStatus
+                : baseStatus;
+
+            return {
+                id: t.id,
+                taskName: t.name,
+                parentName: t.parentName || '',
+                fullPath: t.fullPath || '',
+                issueText: t.issueText,
+                status: finalStatus
+            };
+        });
+
 
     board.innerHTML = '';
 
@@ -2248,6 +2268,34 @@ function renderIssuesKanban(data, flatTaskListOverride = null) {
         `;
 
         const body = col.querySelector('.issues-column-body');
+        body.dataset.statusKey = statusConf.key;
+
+        body.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            if (e.dataTransfer) {
+                e.dataTransfer.dropEffect = 'move';
+            }
+            body.classList.add('issues-drop-target');
+        });
+
+        body.addEventListener('dragleave', () => {
+            body.classList.remove('issues-drop-target');
+        });
+
+        body.addEventListener('drop', (e) => {
+            e.preventDefault();
+            body.classList.remove('issues-drop-target');
+            const issueId = e.dataTransfer ? e.dataTransfer.getData('text/plain') : null;
+            if (!issueId) return;
+
+            handleIssueStatusDrop({
+                issueId,
+                newStatusKey: statusConf.key,
+                notesStoreKey,
+                notes
+            });
+        });
+
         const countPill = col.querySelector('.count-pill');
 
         const colIssues = issues.filter(i => i.status === statusConf.key);
@@ -2257,6 +2305,10 @@ function renderIssuesKanban(data, flatTaskListOverride = null) {
             const card = document.createElement('button');
             card.type = 'button';
             card.className = 'w-full text-left rounded-md bg-white/5 hover:bg-white/10 border border-white/10 px-3 py-2 shadow-sm transition flex flex-col gap-1';
+            card.dataset.issueId = issue.id;
+            card.dataset.issueStatus = issue.status;
+            card.draggable = true;
+
 
             const noteKey = issue.id.toString();
             const hasNote = !!(notes[noteKey] && notes[noteKey].trim());
@@ -2274,6 +2326,18 @@ function renderIssuesKanban(data, flatTaskListOverride = null) {
                 <p class="text-[11px] text-white/80 line-clamp-3" title="${issue.issueText}">${issue.issueText}</p>
             `;
 
+            card.addEventListener('dragstart', (e) => {
+                if (e.dataTransfer) {
+                    e.dataTransfer.setData('text/plain', issue.id.toString());
+                    e.dataTransfer.effectAllowed = 'move';
+                }
+                card.classList.add('opacity-60', 'ring-2', 'ring-[--bl-dorado]');
+            });
+
+            card.addEventListener('dragend', () => {
+                card.classList.remove('opacity-60', 'ring-2', 'ring-[--bl-dorado]');
+            });
+
             card.addEventListener('click', () => {
                 openIssueStickyNote(issue, notes, notesStoreKey);
             });
@@ -2286,6 +2350,33 @@ function renderIssuesKanban(data, flatTaskListOverride = null) {
 
     initializeIssuesStickyHandlers();
 }
+
+
+
+function handleIssueStatusDrop({ issueId, newStatusKey, notesStoreKey, notes }) {
+    if (!issueId || !newStatusKey || !notesStoreKey || !notes) return;
+    if (!projectDataStore || !projectDataStore.tasks) return;
+
+    const flat = flattenTasks(projectDataStore.tasks || []);
+    const task = flat.find(t => String(t.id) === String(issueId));
+    if (!task) return;
+
+    // Actualizar el estado de la tarea
+    task.issueStatus = newStatusKey;
+
+    // Guardar override de estado sin pisar el texto de notas
+    if (!notes.__statuses || typeof notes.__statuses !== 'object') {
+        notes.__statuses = {};
+    }
+    notes.__statuses[issueId] = newStatusKey;
+
+    saveIssuesNotes(notesStoreKey, notes);
+
+    // Re-render usando el store actual
+    renderIssuesKanban(projectDataStore, flat);
+}
+
+
 
 function initializeIssuesStickyHandlers() {
     if (issuesStickyInitialized) return;
